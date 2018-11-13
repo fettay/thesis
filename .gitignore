@@ -118,3 +118,5 @@ dmypy.json
 *.pem
 .idea/
 *.csv
+.DS_Store
+data/

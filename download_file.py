@@ -1,5 +1,4 @@
 from storage import Storage
-import pandas as pd
 from globals import BENIGN_DF, DATADIR
 import requests
 import hashlib
@@ -14,12 +13,12 @@ downloaded = set(storage.ls())
 
 
 def download_one(row):
-    if (DATADIR + row['sha1_of_attached_file']) in downloaded:
-        return row['sha1_of_attached_file']
+    if (DATADIR + row[5]) in downloaded:
+        return row[5]
     try:
-        cnt = requests.get(row['file_url_src']).content
+        cnt = requests.get(row[2]).content
         sha1 = hashlib.sha1(cnt).hexdigest()
-        if sha1 != row['sha1_of_attached_file']:
+        if sha1 != row[5]:
             return
         storage.put(DATADIR + sha1, cnt)
         logger.info('Stored %s' % sha1)
@@ -28,9 +27,16 @@ def download_one(row):
         return
 
 
+def loop_csv(fname):
+    with open(fname, 'rb') as f:
+        data = f.read().decode('latin-1').split("\n")
+    for d in data:
+        yield d.split(',')
+
+
 def run():
-    df = pd.read_csv(BENIGN_DF)
-    rows = (r for _, r in df.iterrows())
+    rows = loop_csv(BENIGN_DF)
+    next(rows)
     with Pool(20) as p:
         shas = p.map(download_one, rows)
     with open('data/benign_downloaded.csv', 'w') as f:
