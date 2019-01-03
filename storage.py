@@ -1,6 +1,8 @@
-from globals import BUCKET_NAME
+from globals import BUCKET_NAME, LOCAL_BUCKET
 import boto3
 from io import BytesIO
+import os
+import pathlib
 
 
 class Storage:
@@ -34,6 +36,30 @@ class Storage:
         for obj in self._bucket.objects.all():
             yield obj.key
 
+            
+class FsStorage:
+    def __init__(self, base_folder=LOCAL_BUCKET):
+        self._prefix = base_folder
+
+    def get_bucket(self):
+        return self
+
+    def put(self, key, value):
+        if len(key.split('/')) > 1:
+            path = "/".join(key.split("/")[:-1])
+            pathlib.Path(self._prefix + path).mkdir(parents=True, exist_ok=True)
+        with open(self._prefix + key, 'wb') as f:
+            f.write(value)
+    
+    def get(self, key):
+        with open(self._prefix + key, 'rb') as f:
+            return f.read()
+
+    def delete(self, key):
+        return os.remove(self._prefix + key)
+
+    def ls(self):
+        return os.listdir(self._prefix)
 
 def test():
     storage = Storage()

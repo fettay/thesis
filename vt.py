@@ -1,6 +1,5 @@
 import requests
 import itertools
-from requests.exceptions import ReadTimeout
 from multiprocessing import Pool
 from retry import retry
 
@@ -69,7 +68,7 @@ class VTConnection(object):
         params = {'resource': batch, 'allinfo': all_info, 'hash': batch}
         try:
             response = self.call(self.http + 'www.virustotal.com/vtapi/v2/file/%s' % report_type, params=params)
-        except ReadTimeout:
+        except Exception:
             print("Timeout error with batch %s" % batch)
             return
         if verbose:
@@ -178,7 +177,7 @@ def _batch_report_async(args):
     vt_instance = VTConnection(proxies=proxies)
     try:
         response = vt_instance.call(http + 'www.virustotal.com/vtapi/v2/file/%s' % report_type, params=params)
-    except ReadTimeout:
+    except Exception:
         print("Timeout error with batch %s" % batch)
         return
     if verbose:
